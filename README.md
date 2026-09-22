@@ -63,4 +63,4 @@ the domain root.
 
 ## License
 
-[MIT](LICENSE)
+MIT
