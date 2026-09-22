@@ -1,0 +1,51 @@
+<article class="site-container post">
+  <a class="back-link" href="/">← All posts</a>
+
+  <header class="post__header">
+    <h1 class="post__title">{{post.title}}</h1>
+    <div class="post__meta">
+      {{#if post.author.display_name}}<span>{{post.author.display_name}}</span><span aria-hidden="true">·</span>{{/if}}
+      <time datetime="{{post.published_at_iso}}">{{post.published_at}}</time>
+      {{#if post.reading_time}}<span aria-hidden="true">·</span><span>{{post.reading_time}}</span>{{/if}}
+    </div>
+  </header>
+
+  <div class="prose" {{#if site.search.enabled}}{{#if_neq post.discoverability "delist"}}data-pagefind-body{{/if}}{{/if}}>{{post.html}}</div>
+
+  {{#if post.tags}}
+    <div class="post__tags">
+      {{#for tag in post.tags}}<a href="{{tag.url}}">#{{tag.name}}</a>{{/for}}
+    </div>
+  {{/if}}
+
+  {{#if post.prev}}
+    <nav class="post-nav" aria-label="Adjacent posts">
+      <a class="post-nav__link" href="{{post.prev.url}}">
+        <span class="post-nav__label">← Previous</span>
+        <strong>{{post.prev.title}}</strong>
+      </a>
+      {{#if post.next}}
+        <a class="post-nav__link post-nav__link--next" href="{{post.next.url}}">
+          <span class="post-nav__label">Next →</span>
+          <strong>{{post.next.title}}</strong>
+        </a>
+      {{#else}}
+        <span></span>
+      {{/if}}
+    </nav>
+  {{#else_if post.next}}
+    <nav class="post-nav" aria-label="Adjacent posts">
+      <span></span>
+      <a class="post-nav__link post-nav__link--next" href="{{post.next.url}}">
+        <span class="post-nav__label">Next →</span>
+        <strong>{{post.next.title}}</strong>
+      </a>
+    </nav>
+  {{/if}}
+
+  <hr class="post__rule">
+
+  {{#if comments.enabled}}
+    {{partial:comments-island}}
+  {{/if}}
+</article>

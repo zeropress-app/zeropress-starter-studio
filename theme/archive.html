@@ -1,0 +1,19 @@
+<section class="site-container intro">
+  <p class="eyebrow">Archive</p>
+  <h1>Everything, in order</h1>
+</section>
+<section class="site-container post-section">
+  {{#for group in archive.groups}}
+    <section class="archive-group">
+      <h2 class="archive-group__label">{{group.label}}</h2>
+      <ul class="archive-list">
+        {{#for post in group.items}}
+          <li class="archive-list__item">
+            <a href="{{post.url}}">{{post.title}}</a>
+            <time datetime="{{post.published_at_iso}}">{{post.published_at}}</time>
+          </li>
+        {{/for}}
+      </ul>
+    </section>
+  {{/for}}
+</section>

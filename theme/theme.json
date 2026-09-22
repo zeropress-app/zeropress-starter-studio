@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.zeropress.dev/theme-runtime/v0.7/schema.json",
+  "name": "Minimal",
+  "namespace": "zeropress",
+  "slug": "minimal",
+  "version": "0.7.3",
+  "license": "MIT",
+  "runtime": "0.7",
+  "description": "A simple blog theme with light and dark colors that follow your system settings.",
+  "features": {
+    "comments": true,
+    "post_index": true
+  },
+  "menu_slots": {
+    "primary": {
+      "title": "Primary Menu",
+      "description": "Header navigation"
+    },
+    "footer": {
+      "title": "Footer Menu",
+      "description": "Compact footer links"
+    }
+  }
+}

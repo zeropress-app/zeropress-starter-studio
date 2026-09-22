@@ -1,0 +1,21 @@
+<section class="site-container intro">
+  <p class="eyebrow">Category</p>
+  <h1>{{taxonomy.name}}</h1>
+  {{#if taxonomy.count}}<p class="intro__copy">{{taxonomy.count}} posts</p>{{/if}}
+</section>
+<section class="site-container post-section">
+  <ul class="post-list">
+    {{#for post in posts.items}}
+      <li class="post-list__item">
+        <a class="post-card" href="{{post.url}}">
+          <div class="post-card__row">
+            <h2 class="post-card__title">{{post.title}}</h2>
+            <time class="post-card__date" datetime="{{post.published_at_iso}}">{{post.published_at}}</time>
+          </div>
+          {{#if post.summary}}<p class="post-card__excerpt">{{post.summary}}</p>{{/if}}
+        </a>
+      </li>
+    {{/for}}
+  </ul>
+  {{partial:pagination}}
+</section>

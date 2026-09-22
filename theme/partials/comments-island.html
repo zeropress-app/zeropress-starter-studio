@@ -1,0 +1,138 @@
+<section class="comments-block">
+  <div
+    class="comments-shell"
+    data-zp-comments
+    data-zp-comments-target-type="{{comments.target_type}}"
+    data-zp-comments-target-public-id="{{comments.target_public_id}}"
+    data-zp-comments-provider="{{comments.provider}}"
+    data-zp-comments-api-base-url="{{comments.api_base_url}}"
+    data-zp-comments-per-page="{{comments.per_page}}"
+    data-zp-comments-order="{{comments.order}}"
+    data-zp-comments-threading-enabled="{{comments.threading.enabled}}"
+    data-zp-comments-threading-max-depth="{{comments.threading.max_depth}}"
+    {{#if comments.request_token}}data-zp-comments-request-token="{{comments.request_token}}"{{/if}}
+    hidden
+  ></div>
+  <div class="comments-lazy-sentinel" data-zp-comments-sentinel aria-hidden="true"></div>
+
+  <template data-zp-comments-shell>
+    <section id="comments" class="zp-comments">
+      <header class="zp-comments__header">
+        <div class="zp-comments__heading">
+          <p class="section-kicker">Conversation</p>
+          <h2>In the margins</h2>
+        </div>
+        <p class="zp-comments__countline"><span data-role="count">0</span> notes</p>
+      </header>
+
+      <div class="zp-comments__feedback" data-role="feedback"></div>
+      <div class="zp-comments__form-slot" data-role="form"></div>
+      <div class="zp-comments__list" data-role="list"></div>
+      <div class="zp-comments__pagination" data-role="pagination" hidden>
+        <button class="zp-comments__load-more" type="button" data-action="load-more">Load more</button>
+      </div>
+    </section>
+  </template>
+
+  <template data-zp-comments-form>
+    <form class="zp-comment-form" data-zp-comment-form>
+      <input type="hidden" name="parent" value="">
+
+      <div class="zp-comment-form__intro">
+        <h3>Leave a note</h3>
+        <p class="zp-comment-form__copy">Join the conversation with a thoughtful note.</p>
+      </div>
+
+      <div class="zp-comment-form__row">
+        <label class="zp-comment-form__field">
+          <span>Your name</span>
+          <input type="text" name="author_name" required autocomplete="name" placeholder="Your name">
+        </label>
+
+        <label class="zp-comment-form__field">
+          <span>Email</span>
+          <input type="email" name="author_email" required autocomplete="email" placeholder="name@example.com">
+        </label>
+      </div>
+
+      <label class="zp-comment-form__field">
+        <span>Your comment</span>
+        <textarea name="content" required minlength="1" maxlength="5000" placeholder="Share a thought..."></textarea>
+      </label>
+
+      <div class="zp-comment-form__honeypot" aria-hidden="true">
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <button class="zp-comment-form__submit" type="submit">Post comment</button>
+    </form>
+  </template>
+
+  <template data-zp-comment-reply-form>
+    <form class="zp-comment-form zp-comment-form--reply" data-zp-comment-form>
+      <input type="hidden" name="parent" value="">
+
+      <div class="zp-comment-form__row">
+        <label class="zp-comment-form__field">
+          <span>Your name</span>
+          <input type="text" name="author_name" required autocomplete="name" placeholder="Your name">
+        </label>
+
+        <label class="zp-comment-form__field">
+          <span>Email</span>
+          <input type="email" name="author_email" required autocomplete="email" placeholder="name@example.com">
+        </label>
+      </div>
+
+      <label class="zp-comment-form__field">
+        <span>Your reply</span>
+        <textarea name="content" required minlength="1" maxlength="5000" placeholder="Write a reply..."></textarea>
+      </label>
+
+      <div class="zp-comment-form__honeypot" aria-hidden="true">
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="zp-comment-form__actions">
+        <button class="zp-comment-form__submit" type="submit">Post reply</button>
+        <button class="zp-comment-form__secondary" type="button" data-action="cancel-reply">Cancel</button>
+      </div>
+    </form>
+  </template>
+
+  <template data-zp-comment-item>
+    <article class="zp-comment" data-role="comment-item">
+      <div class="zp-comment__avatar" data-role="avatar" aria-hidden="true"></div>
+
+      <div class="zp-comment__body">
+        <header class="zp-comment__meta">
+          <div class="zp-comment__meta-line">
+            <strong class="zp-comment__author" data-role="author"></strong>
+            <time class="zp-comment__date" data-role="date"></time>
+          </div>
+        </header>
+
+        <div class="zp-comment__content" data-role="content"></div>
+
+        <div class="zp-comment__actions">
+          <button type="button" class="zp-comment__action" data-action="reply">Reply</button>
+        </div>
+
+        <div class="zp-comment__reply-slot" data-role="reply-form"></div>
+        <div class="zp-comment__replies" data-role="replies"></div>
+      </div>
+    </article>
+  </template>
+
+  <template data-zp-comments-empty>
+    <p class="zp-comments-empty">No comments yet. Be the first to leave a note.</p>
+  </template>
+
+  <template data-zp-comment-error>
+    <p class="zp-comment-error" data-role="message"></p>
+  </template>
+
+  <template data-zp-comment-success>
+    <p class="zp-comment-success" data-role="message"></p>
+  </template>
+</section>

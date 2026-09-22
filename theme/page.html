@@ -1,0 +1,14 @@
+<article class="site-container page">
+  {{#if route.is_front_page}}
+    <div class="prose" {{#if site.search.enabled}}{{#if_neq page.discoverability "delist"}}data-pagefind-body{{/if}}{{/if}}>{{page.html}}</div>
+  {{#else}}
+    <header class="page__header">
+      <p class="eyebrow">Page</p>
+      <h1>{{page.title}}</h1>
+    </header>
+    <div class="prose" {{#if site.search.enabled}}{{#if_neq page.discoverability "delist"}}data-pagefind-body{{/if}}{{/if}}>{{page.html}}</div>
+  {{/if}}
+  {{#if comments.enabled}}
+    {{partial:comments-island}}
+  {{/if}}
+</article>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="{{site.locale}}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{meta.title}}</title>
+    <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="/assets/style.css">
+    {{meta.head_tags}}
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    {{slot:header}}
+    <main id="content" class="site-main">
+      {{slot:content}}
+    </main>
+    {{slot:footer}}
+  </body>
+</html>

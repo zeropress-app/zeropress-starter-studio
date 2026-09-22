@@ -1,0 +1,124 @@
+{
+  "$schema": "https://schemas.zeropress.dev/preview-data/v0.7/schema.json",
+  "version": "0.7",
+  "generator": "zeropress-starter-studio",
+  "generated_at": "2026-09-22T00:00:00Z",
+  "site": {
+    "title": "My site",
+    "description": "Notes, stories, and ideas.",
+    "url": "",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "footer": {
+      "attribution": true
+    },
+    "media_origin": "",
+    "posts_per_page": 10,
+    "date_style": "medium",
+    "time_style": "none"
+  },
+  "content": {
+    "authors": [
+      {
+        "id": "33333333-3333-4333-8333-333333333333",
+        "display_name": "Editor"
+      }
+    ],
+    "posts": [
+      {
+        "public_id": 1,
+        "title": "Welcome to your site",
+        "slug": "welcome",
+        "content": "Your site is ready. These sample posts will be replaced when you publish from ZeroPress Studio.\n\n## Connect Studio\n\nOpen the README in your new GitHub repository and follow **Deploy and connect Studio**. After connecting, you can write and publish from Studio.",
+        "document_type": "markdown",
+        "excerpt": "Connect ZeroPress Studio to publish your own posts and pages.",
+        "published_at_iso": "2026-09-22T00:00:00Z",
+        "updated_at_iso": "2026-09-22T00:00:00Z",
+        "author_id": "33333333-3333-4333-8333-333333333333",
+        "status": "published",
+        "category_slugs": [
+          "notes"
+        ],
+        "tag_slugs": [
+          "writing"
+        ]
+      },
+      {
+        "public_id": 2,
+        "title": "A few words to start",
+        "slug": "a-few-words",
+        "content": "A new page can start with a single sentence. Add a photo, tell a story, or share something you learned.\n\n## Make it yours\n\n- Give your site a name.\n- Write an About page.\n- Publish your first post.\n\nYou can change the layout and colors in the repository’s `theme/` directory.",
+        "document_type": "markdown",
+        "excerpt": "A new page can start with a single sentence.",
+        "published_at_iso": "2026-09-21T00:00:00Z",
+        "updated_at_iso": "2026-09-21T00:00:00Z",
+        "author_id": "33333333-3333-4333-8333-333333333333",
+        "status": "published",
+        "category_slugs": [
+          "notes"
+        ],
+        "tag_slugs": [
+          "writing"
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "title": "About",
+        "slug": "about",
+        "content": "This is the sample About page. Introduce yourself and your site in ZeroPress Studio, then publish to replace this text.",
+        "document_type": "markdown",
+        "excerpt": "About this site.",
+        "status": "published"
+      }
+    ],
+    "categories": [
+      {
+        "name": "Notes",
+        "slug": "notes"
+      }
+    ],
+    "tags": [
+      {
+        "name": "Writing",
+        "slug": "writing"
+      }
+    ]
+  },
+  "menus": {
+    "primary": {
+      "name": "Primary Menu",
+      "items": [
+        {
+          "title": "Home",
+          "url": "/",
+          "target": "_self",
+          "children": []
+        },
+        {
+          "title": "About",
+          "url": "/about/",
+          "target": "_self",
+          "children": []
+        },
+        {
+          "title": "Archive",
+          "url": "/archive/",
+          "target": "_self",
+          "children": []
+        }
+      ]
+    },
+    "footer": {
+      "name": "Footer Menu",
+      "items": [
+        {
+          "title": "About",
+          "url": "/about/",
+          "target": "_self",
+          "children": []
+        }
+      ]
+    }
+  }
+}

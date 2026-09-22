@@ -1,0 +1,20 @@
+<footer class="site-footer">
+  <div class="site-container site-footer__inner">
+    <div class="site-footer__copy">
+      {{#if site.footer.copyright_text}}
+        <p>{{site.footer.copyright_text}}</p>
+      {{#else_if site.title}}
+        <p>{{site.title}}</p>
+      {{/if}}
+      {{#if site.footer.attribution}}
+        <p class="site-footer__attribution">Published with <a href="https://zeropress.app" target="_blank" rel="noreferrer noopener">ZeroPress</a></p>
+      {{/if}}
+    </div>
+    <nav class="site-footer__nav" aria-label="Footer navigation">
+      {{menu:footer}}
+    </nav>
+  </div>
+  <script defer src="/assets/theme.js"></script>
+  {{#if comments.enabled}}<script defer src="/assets/comment-data.js"></script>
+  <script defer src="/assets/comment.js"></script>{{/if}}
+</footer>
