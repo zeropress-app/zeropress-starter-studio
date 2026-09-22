@@ -1,0 +1,28 @@
+{
+  "name": "zeropress-starter-studio",
+  "description": "A static ZeroPress site published from Studio",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "zeropress-theme dev ./theme --data ./zeropress-preview-data.json --public-dir ./public",
+    "build": "zeropress-build ./theme --data ./zeropress-preview-data.json --public-dir ./public --out ./dist --empty-out-dir",
+    "preview": "npm run build && wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "npm run build && wrangler deploy --dry-run",
+    "test": "node --test",
+    "format:wrangler": "node scripts/format-wrangler.mjs",
+    "format:wrangler:check": "node scripts/format-wrangler.mjs --check"
+  },
+  "dependencies": {
+    "@zeropress/build": "0.7.3",
+    "@zeropress/theme": "0.7.3"
+  },
+  "devDependencies": {
+    "jsonc-parser": "3.3.1",
+    "wrangler": "4.133.0"
+  }
+}
