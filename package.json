@@ -1,6 +1,6 @@
 {
   "name": "zeropress-starter-studio",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A static ZeroPress site published from Studio",
   "private": true,
   "license": "MIT",
