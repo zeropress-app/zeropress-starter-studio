@@ -11,6 +11,10 @@
   "scripts": {
     "dev": "zeropress-theme dev ./theme --data ./zeropress-preview-data.json --public-dir ./public",
     "build": "zeropress-build ./theme --data ./zeropress-preview-data.json --public-dir ./public --out ./dist --empty-out-dir",
+    "postbuild": "npm run search:replace-with-pagefind",
+    "search:replace-with-pagefind": "node scripts/replace-search-with-pagefind.mjs",
+    "dist:prettify": "node scripts/prettify.mjs",
+    "dist:minify": "node scripts/minify.mjs",
     "preview": "npm run build && wrangler dev --local",
     "deploy": "wrangler deploy",
     "deploy:dry-run": "npm run build && wrangler deploy --dry-run",
@@ -19,11 +23,12 @@
     "format:wrangler:check": "node scripts/format-wrangler.mjs --check"
   },
   "dependencies": {
-    "@zeropress/build": "0.7.3",
-    "@zeropress/theme": "0.7.3"
+    "@zeropress/build": "^0.7.6",
+    "@zeropress/theme": "^0.7.6"
   },
   "devDependencies": {
     "jsonc-parser": "3.3.1",
-    "wrangler": "4.133.0"
+    "pagefind": "1.5.2",
+    "wrangler": "4.146.0"
   }
 }
