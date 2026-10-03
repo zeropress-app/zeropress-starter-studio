@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Form</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="form-shell">
+      <header>
+        <h1 data-form-title>Form</h1>
+        <p data-form-description>Send a response.</p>
+      </header>
+
+      <form data-form aria-busy="true">
+        <fieldset class="entry-controls" data-form-controls disabled>
+          <div data-form-fields></div>
+          <button type="submit" data-form-submit disabled>Send</button>
+        </fieldset>
+        <p class="message" role="status" aria-live="polite" data-state="loading" data-form-message>Loading configuration...</p>
+        <button type="button" data-form-retry hidden>Check again</button>
+      </form>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,208 @@
+:root {
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-heading: ui-serif, Georgia, Cambria, "Times New Roman", "AppleMyungjo", "Batang", serif;
+  color-scheme: light;
+  --page: hsl(40 22% 97%);
+  --chalk: hsl(36 21% 94%);
+  --ink-dark: hsl(18 8% 21%);
+  --ink-base: hsl(24 8% 33%);
+  --ink-light: hsl(28 10% 42%);
+  --tab-terracotta: hsl(14 38% 40%);
+  --border-strong: hsl(28 9% 51% / 0.32);
+  --selection-bg: hsl(14 38% 40% / 0.22);
+  --alert-tip-color: hsl(145 48% 32%);
+  --alert-tip-bg: hsl(145 48% 32% / 0.08);
+  --alert-caution-color: hsl(358 58% 45%);
+  --alert-caution-bg: hsl(358 58% 45% / 0.08);
+  font-family: var(--font-body);
+  background: var(--page);
+  color: var(--ink-base);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: hsl(22 8% 12%);
+    --chalk: hsl(24 7% 17%);
+    --ink-dark: hsl(38 25% 92%);
+    --ink-base: hsl(34 14% 78%);
+    --ink-light: hsl(30 9% 58%);
+    --tab-terracotta: hsl(14 42% 66%);
+    --border-strong: hsl(30 9% 58% / 0.3);
+    --selection-bg: hsl(14 42% 66% / 0.34);
+    --alert-tip-color: hsl(145 48% 64%);
+    --alert-tip-bg: hsl(145 48% 64% / 0.1);
+    --alert-caution-color: hsl(358 78% 70%);
+    --alert-caution-bg: hsl(358 78% 70% / 0.1);
+  }
+}
+
+::selection { background: var(--selection-bg); }
+:focus-visible { outline: 2px solid var(--tab-terracotta); outline-offset: 2px; }
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 1.5rem;
+  display: grid;
+  place-items: center;
+  background: var(--page);
+}
+
+.form-shell {
+  width: min(100%, 34rem);
+  display: grid;
+  gap: 1.1rem;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-family: var(--font-heading);
+  color: var(--ink-dark);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.15;
+}
+
+p {
+  color: var(--ink-light);
+  line-height: 1.55;
+}
+
+form,
+.entry-controls {
+  display: grid;
+  gap: 1rem;
+}
+
+.entry-controls {
+  min-width: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.field {
+  display: grid;
+  gap: .45rem;
+}
+
+.choice-field {
+  display: grid;
+  gap: .55rem;
+}
+
+.choice-list {
+  display: grid;
+  gap: .45rem;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  color: var(--ink-base);
+  line-height: 1.4;
+}
+
+label,
+legend {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-light);
+}
+
+.help-text {
+  font-size: .875rem;
+  color: var(--ink-light);
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+input,
+textarea,
+select,
+button {
+  width: 100%;
+  border-radius: .375rem;
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid var(--border-strong);
+  padding: .75rem .85rem;
+  background: var(--page);
+  color: var(--ink-dark);
+}
+
+textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  accent-color: var(--tab-terracotta);
+}
+
+button {
+  border: 0;
+  padding: .85rem 1rem;
+  background: var(--tab-terracotta);
+  color: var(--page);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+.message {
+  display: none;
+  border: 1px solid var(--border-strong);
+  border-radius: .5rem;
+  padding: .8rem .9rem;
+  color: var(--ink-base);
+  background: var(--page);
+  line-height: 1.5;
+}
+
+.message[data-state="setup"],
+.message[data-state="loading"] {
+  display: block;
+}
+
+.message[data-state="success"] {
+  display: block;
+  border-color: var(--alert-tip-color);
+  background: var(--alert-tip-bg);
+}
+
+.message[data-state="error"] {
+  display: block;
+  border-color: var(--alert-caution-color);
+  background: var(--alert-caution-bg);
+}

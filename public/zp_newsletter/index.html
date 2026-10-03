@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Newsletter sign-up</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="newsletter-shell">
+      <header>
+        <h1 data-newsletter-title>Subscribe</h1>
+        <p data-newsletter-description>Get updates by email.</p>
+      </header>
+
+      <form data-newsletter-form aria-busy="true">
+        <fieldset class="entry-controls" data-newsletter-controls disabled>
+          <div class="field">
+            <label for="newsletter-email">Email address</label>
+            <input id="newsletter-email" type="email" name="email" autocomplete="email" required>
+          </div>
+          <div data-newsletter-fields></div>
+          <button type="submit" data-newsletter-submit disabled>Subscribe</button>
+        </fieldset>
+        <p class="message" role="status" aria-live="polite" data-state="loading" data-newsletter-message>Loading configuration...</p>
+        <button type="button" data-newsletter-retry hidden>Check again</button>
+        <p class="provider-note" data-newsletter-note hidden>You will receive a confirmation email before the subscription is activated.</p>
+      </form>
+
+      <section class="confirm-panel" data-newsletter-confirm hidden>
+        <p>Confirm your subscription by pressing the button below.</p>
+        <button type="button" data-newsletter-confirm-submit disabled>Confirm subscription</button>
+        <p class="message" role="status" aria-live="polite" data-newsletter-confirm-message></p>
+      </section>
+
+      <section class="unsubscribe-panel" data-newsletter-unsubscribe hidden>
+        <h1>Unsubscribe from this newsletter?</h1>
+        <p>You will stop receiving newsletter emails at this address.</p>
+        <button type="button" data-newsletter-unsubscribe-submit disabled>Unsubscribe</button>
+        <p class="message" role="status" aria-live="polite" data-newsletter-unsubscribe-message></p>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

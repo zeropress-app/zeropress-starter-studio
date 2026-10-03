@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="A serif letter study with a baseline grid and terracotta color swatches">
+  <rect width="960" height="600" fill="#f7f3eb"/>
+  <path d="M80 120H880M80 220H880M80 320H880M80 420H880M80 520H880M160 80V540M480 80V540M800 80V540" stroke="#dcd4c8" stroke-width="2"/>
+  <path d="M80 420H880" stroke="#b86649" stroke-width="3"/>
+  <text x="125" y="418" fill="#44362e" font-family="Georgia, serif" font-size="360" letter-spacing="-18">Aa</text>
+  <rect x="622" y="129" width="178" height="28" rx="4" fill="#b86649"/>
+  <rect x="622" y="184" width="132" height="12" rx="4" fill="#7f7468"/>
+  <rect x="622" y="217" width="168" height="12" rx="4" fill="#7f7468"/>
+  <rect x="622" y="250" width="149" height="12" rx="4" fill="#7f7468"/>
+  <circle cx="650" cy="337" r="28" fill="#44362e"/>
+  <circle cx="711" cy="337" r="28" fill="#b86649"/>
+  <circle cx="772" cy="337" r="28" fill="#c8d1c1"/>
+  <path d="M160 472H430M160 493H370" stroke="#9e9385" stroke-width="6" stroke-linecap="round"/>
+</svg>

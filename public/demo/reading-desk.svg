@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="An open notebook, a pencil, and a cup on a warm paper background">
+  <rect width="960" height="600" fill="#ece7de"/>
+  <path d="M0 450H960M0 490H960M0 530H960" stroke="#d9d0c4"/>
+  <circle cx="776" cy="172" r="83" fill="#c8d1c1"/>
+  <circle cx="776" cy="172" r="55" fill="#fffaf2"/>
+  <circle cx="776" cy="172" r="39" fill="#705143"/>
+  <path d="M829 153C879 143 879 201 829 192" fill="none" stroke="#fffaf2" stroke-width="15"/>
+  <path d="M138 132L452 149L728 111L758 468L464 504L163 480Z" fill="#c2b5a6"/>
+  <path d="M120 111L452 130L450 480L148 457Z" fill="#fffaf2"/>
+  <path d="M452 130L712 95L739 448L450 480Z" fill="#f8f1e6"/>
+  <path d="M452 130L450 480" stroke="#d3c6b6" stroke-width="3"/>
+  <path d="M177 187L388 199M180 222L394 234M183 257L390 269M188 327L384 339M191 362L338 371" stroke="#b8afa2" stroke-width="5" stroke-linecap="round"/>
+  <path d="M501 184L665 164M503 219L654 201M507 254L671 234M512 323L675 303M515 358L636 343" stroke="#b8afa2" stroke-width="5" stroke-linecap="round"/>
+  <path d="M501 284L647 267" stroke="#b86649" stroke-width="9" stroke-linecap="round"/>
+  <path d="M620 517L816 329" stroke="#b86649" stroke-width="16"/>
+  <path d="M613 524L627 496L641 510Z" fill="#4d4038"/>
+  <path d="M811 334L830 316" stroke="#4d4038" stroke-width="16"/>
+</svg>
