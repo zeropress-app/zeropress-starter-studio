@@ -25,6 +25,7 @@
         <p class="zp-comments__countline"><span data-role="count">0</span> notes</p>
       </header>
 
+      <div class="zp-comments__identity" data-role="identity" hidden></div>
       <div class="zp-comments__feedback" data-role="feedback"></div>
       <div class="zp-comments__form-slot" data-role="form"></div>
       <div class="zp-comments__list" data-role="list"></div>
@@ -49,7 +50,7 @@
           <input type="text" name="author_name" required autocomplete="name" placeholder="Your name">
         </label>
 
-        <label class="zp-comment-form__field">
+        <label class="zp-comment-form__field" data-role="guest-email-field">
           <span>Email</span>
           <input type="email" name="author_email" required autocomplete="email" placeholder="name@example.com">
         </label>
@@ -64,6 +65,7 @@
         <input type="text" name="website" tabindex="-1" autocomplete="off">
       </div>
 
+      <div class="zp-comment-form__verification" data-role="write-verification"></div>
       <button class="zp-comment-form__submit" type="submit">Post comment</button>
     </form>
   </template>
@@ -78,7 +80,7 @@
           <input type="text" name="author_name" required autocomplete="name" placeholder="Your name">
         </label>
 
-        <label class="zp-comment-form__field">
+        <label class="zp-comment-form__field" data-role="guest-email-field">
           <span>Email</span>
           <input type="email" name="author_email" required autocomplete="email" placeholder="name@example.com">
         </label>
@@ -93,6 +95,7 @@
         <input type="text" name="website" tabindex="-1" autocomplete="off">
       </div>
 
+      <div class="zp-comment-form__verification" data-role="write-verification"></div>
       <div class="zp-comment-form__actions">
         <button class="zp-comment-form__submit" type="submit">Post reply</button>
         <button class="zp-comment-form__secondary" type="button" data-action="cancel-reply">Cancel</button>
@@ -108,6 +111,7 @@
         <header class="zp-comment__meta">
           <div class="zp-comment__meta-line">
             <strong class="zp-comment__author" data-role="author"></strong>
+            <span class="zp-comment__author-badge" data-role="author-badge" hidden></span>
             <time class="zp-comment__date" data-role="date"></time>
           </div>
         </header>

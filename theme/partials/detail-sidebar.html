@@ -1,0 +1,19 @@
+<aside class="sidebar-stack detail-sidebar{{#if widgets.sidebar.items}}{{#else}} detail-sidebar--toc-only{{/if}}">
+  {{#if post.toc}}
+    <div class="post-toc-aside">
+      <div class="post-toc-sticky">
+        <p class="section-kicker">On this page</p>
+        <nav class="post-toc" aria-label="Table of contents">
+          <ol class="post-toc__list">
+            {{#for item in post.toc}}
+              <li class="post-toc__item post-toc__item--level-{{item.level}}">
+                <a class="post-toc__link post-toc__link--level-{{item.level}}" href="{{item.href}}">{{item.title}}</a>
+              </li>
+            {{/for}}
+          </ol>
+        </nav>
+      </div>
+    </div>
+  {{/if}}
+  {{partial:sidebar-widgets}}
+</aside>

@@ -1,17 +1,17 @@
-{{#if pagination.enabled}}
-  {{#if pagination.has_multiple_pages}}
+{{#if pagination.has_multiple_pages}}
+  <div class="pagination-wrap">
     <nav class="pagination" aria-label="Pagination">
-      {{#if pagination.has_prev}}<a class="pagination__edge" href="{{pagination.prev_url}}">← Previous</a>{{#else}}<span class="pagination__edge is-disabled">← Previous</span>{{/if}}
-      <span class="pagination__pages">
+      {{#if pagination.has_prev}}<a href="{{pagination.prev_url}}" class="prev"><svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-left"/></svg> Previous</a>{{#else}}<span class="prev disabled"><svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-left"/></svg> Previous</span>{{/if}}
+      <span class="pages">
         {{#for page in pagination.window}}
           {{#if_eq page.kind "gap"}}
-            <span class="pagination__gap" aria-hidden="true">…</span>
+            <span class="page-gap" aria-hidden="true">…</span>
           {{#else_if_eq page.kind "page"}}
-            <a href="{{page.url}}" class="pagination__page {{#if page.current}}is-current{{/if}}">{{page.number}}</a>
+            <a href="{{page.url}}" class="page-link {{#if page.current}}current{{/if}}">{{page.number}}</a>
           {{/if}}
         {{/for}}
       </span>
-      {{#if pagination.has_next}}<a class="pagination__edge" href="{{pagination.next_url}}">Next →</a>{{#else}}<span class="pagination__edge is-disabled">Next →</span>{{/if}}
+      {{#if pagination.has_next}}<a href="{{pagination.next_url}}" class="next">Next <svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-right"/></svg></a>{{#else}}<span class="next disabled">Next <svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-right"/></svg></span>{{/if}}
     </nav>
-  {{/if}}
+  </div>
 {{/if}}

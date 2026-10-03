@@ -1,0 +1,82 @@
+{{#for widget in widgets.sidebar.items}}
+  {{#if_eq widget.type "recent-posts"}}
+    <section class="content-card sidebar-card widget-card widget-card--recent-posts">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <ul class="widget-list">
+        {{#for item in widget.items}}
+          <li class="widget-list__item"><a href="{{item.url}}">{{item.title}}</a>{{#if widget.show_date}}<span class="widget-list__meta">{{item.published_at}}</span>{{/if}}</li>
+        {{/for}}
+      </ul>
+    </section>
+  {{#else_if_eq widget.type "categories"}}
+    <section class="content-card sidebar-card widget-card widget-card--categories">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <div class="taxonomy-list taxonomy-list--stack widget-taxonomy">
+        {{#for item in widget.items}}
+          <a href="{{item.url}}" class="category-link">{{item.name}}{{#if widget.show_count}} <span class="widget-taxonomy__count">({{item.count}})</span>{{/if}}</a>
+        {{/for}}
+      </div>
+    </section>
+  {{#else_if_eq widget.type "tags"}}
+    <section class="content-card sidebar-card widget-card widget-card--tags">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <div class="taxonomy-list widget-taxonomy">
+        {{#for item in widget.items}}
+          <a href="{{item.url}}" class="tag-link">{{item.name}}{{#if widget.show_count}} <span class="widget-taxonomy__count">({{item.count}})</span>{{/if}}</a>
+        {{/for}}
+      </div>
+    </section>
+  {{#else_if_eq widget.type "archives"}}
+    <section class="content-card sidebar-card widget-card widget-card--archives">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <ul class="widget-list">
+        {{#for item in widget.items}}
+          <li class="widget-list__item"><a href="{{item.url}}">{{item.label}}</a><span class="widget-list__meta">{{item.meta}}</span></li>
+        {{/for}}
+      </ul>
+    </section>
+  {{#else_if_eq widget.type "text"}}
+    <section class="content-card sidebar-card widget-card widget-card--text">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <div class="widget-copy">{{widget.html}}</div>
+    </section>
+  {{#else_if_eq widget.type "link-list"}}
+    <section class="content-card sidebar-card widget-card widget-card--link-list">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <div class="taxonomy-list taxonomy-list--stack widget-link-list">
+        {{#for item in widget.items}}
+          <a href="{{item.url}}" target="{{item.target}}" rel="noreferrer noopener">{{item.label}}</a>
+        {{/for}}
+      </div>
+    </section>
+  {{#else_if_eq widget.type "search"}}
+    <section class="content-card sidebar-card widget-card widget-card--search">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <div class="widget-search">
+        <div class="search-theme-wrapper">
+          <button class="widget-search-button" type="button" data-cmdk-open disabled>{{widget.button_label}}</button>
+        </div>
+      </div>
+    </section>
+  {{#else_if_eq widget.type "profile"}}
+    <section class="content-card sidebar-card widget-card widget-card--profile">
+      <p class="section-kicker">Widget</p>
+      {{#if widget.title}}<h2>{{widget.title}}</h2>{{/if}}
+      <div class="widget-profile">
+        {{#if widget.avatar_url}}<img class="widget-profile__avatar" src="{{widget.avatar_url}}" alt="{{widget.display_name}}">{{/if}}
+        <div class="widget-profile__body">
+          {{#if widget.display_name}}<p class="widget-profile__name">{{widget.display_name}}</p>{{/if}}
+          {{#if widget.affiliation}}<p class="widget-profile__affiliation">{{widget.affiliation}}</p>{{/if}}
+          {{#if widget.bio_text}}<p class="sidebar-copy">{{widget.bio_text}}</p>{{/if}}
+        </div>
+      </div>
+    </section>
+  {{/if}}
+{{/for}}

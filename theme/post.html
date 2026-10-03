@@ -1,51 +1,73 @@
-<article class="site-container post">
-  <a class="back-link" href="/">← All posts</a>
+<div class="shell post-shell">
+  <a class="back-link" href="/"><svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-left"/></svg> Back to writing</a>
 
-  <header class="post__header">
-    <h1 class="post__title">{{post.title}}</h1>
-    <div class="post__meta">
-      {{#if post.author.display_name}}<span>{{post.author.display_name}}</span><span aria-hidden="true">·</span>{{/if}}
-      <time datetime="{{post.published_at_iso}}">{{post.published_at}}</time>
-      {{#if post.reading_time}}<span aria-hidden="true">·</span><span>{{post.reading_time}}</span>{{/if}}
-    </div>
-  </header>
+  <div class="detail-grid post-grid">
+    <article class="article-shell article-shell--post">
+      <header class="article-header" {{#if post.categories}}data-pagefind-meta="categories:{{#for category in post.categories}}{{category.name}}{{#if loop.last}}{{#else}}, {{/if}}{{/for}}"{{/if}}>
+        <div class="meta-row">
+          {{#if post.categories}}
+            {{#for category in post.categories}}<a href="{{category.url}}" class="category-link">{{category.name}}</a>{{#if loop.last}}{{#else}}<span class="meta-sep" aria-hidden="true"></span>{{/if}}{{/for}}
+            <span class="meta-sep" aria-hidden="true"></span>
+          {{/if}}
+          <time datetime="{{post.published_at_iso}}" title="{{post.published_at_iso}}" data-zp-local-date-time>{{post.published_at}}</time>
+          <span class="meta-sep" aria-hidden="true"></span>
+          <span>{{post.reading_time}}</span>
+          {{#if post.author.display_name}}
+            <span class="meta-sep" aria-hidden="true"></span>
+            <span>{{post.author.display_name}}</span>
+          {{/if}}
+        </div>
+        <h1 data-pagefind-meta="title">{{post.title}}</h1>
+        {{#if post.excerpt}}<p class="lede" data-pagefind-meta="excerpt">{{post.excerpt}}</p>{{/if}}
+      </header>
 
-  <div class="prose" {{#if site.search.enabled}}{{#if_neq post.discoverability "delist"}}data-pagefind-body{{/if}}{{/if}}>{{post.html}}</div>
+      {{#if post.featured_image}}<img class="article-featured-image" src="{{post.featured_image}}" alt="">{{/if}}
 
-  {{#if post.tags}}
-    <div class="post__tags">
-      {{#for tag in post.tags}}<a href="{{tag.url}}">#{{tag.name}}</a>{{/for}}
-    </div>
-  {{/if}}
+      <div class="article-content prose-blog" {{#if site.search.enabled}}{{#if_neq post.discoverability "delist"}}data-pagefind-body{{/if}}{{/if}}>{{post.html}}</div>
 
-  {{#if post.prev}}
-    <nav class="post-nav" aria-label="Adjacent posts">
-      <a class="post-nav__link" href="{{post.prev.url}}">
-        <span class="post-nav__label">← Previous</span>
-        <strong>{{post.prev.title}}</strong>
-      </a>
-      {{#if post.next}}
-        <a class="post-nav__link post-nav__link--next" href="{{post.next.url}}">
-          <span class="post-nav__label">Next →</span>
-          <strong>{{post.next.title}}</strong>
-        </a>
-      {{#else}}
-        <span></span>
+      {{#if post.tags}}
+        <section class="filed-under">
+          <span class="section-kicker">Filed under</span>
+          <div class="taxonomy-list" data-pagefind-meta="tags">
+            {{#for tag in post.tags}}<a href="{{tag.url}}" class="tag-link">#{{tag.name}}</a>{{#if loop.last}}{{#else}}<span class="meta-sep" aria-hidden="true"></span>{{/if}}{{/for}}
+          </div>
+        </section>
       {{/if}}
-    </nav>
-  {{#else_if post.next}}
-    <nav class="post-nav" aria-label="Adjacent posts">
-      <span></span>
-      <a class="post-nav__link post-nav__link--next" href="{{post.next.url}}">
-        <span class="post-nav__label">Next →</span>
-        <strong>{{post.next.title}}</strong>
-      </a>
-    </nav>
-  {{/if}}
 
-  <hr class="post__rule">
+      {{#if post.prev}}
+        <nav class="post-nav" aria-label="Adjacent posts">
+          <a class="post-nav__link" href="{{post.prev.url}}">
+            <span class="post-nav__label"><svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-left"/></svg> Previous</span>
+            <strong>{{post.prev.title}}</strong>
+          </a>
+          {{#if post.next}}
+            <a class="post-nav__link post-nav__link--next" href="{{post.next.url}}">
+              <span class="post-nav__label">Next <svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-right"/></svg></span>
+              <strong>{{post.next.title}}</strong>
+            </a>
+          {{#else}}
+            <div class="post-nav__spacer" aria-hidden="true"></div>
+          {{/if}}
+        </nav>
+      {{#else_if post.next}}
+        <nav class="post-nav" aria-label="Adjacent posts">
+          <div class="post-nav__spacer" aria-hidden="true"></div>
+          <a class="post-nav__link post-nav__link--next" href="{{post.next.url}}">
+            <span class="post-nav__label">Next <svg class="icon icon--inline" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-arrow-right"/></svg></span>
+            <strong>{{post.next.title}}</strong>
+          </a>
+        </nav>
+      {{/if}}
 
-  {{#if comments.enabled}}
-    {{partial:comments-island}}
-  {{/if}}
-</article>
+      {{#if comments.enabled}}
+        {{partial:comments-island}}
+      {{/if}}
+    </article>
+
+    {{#if post.toc}}
+      {{partial:detail-sidebar}}
+    {{#else_if widgets.sidebar.items}}
+      {{partial:detail-sidebar}}
+    {{/if}}
+  </div>
+</div>

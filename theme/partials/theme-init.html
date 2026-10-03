@@ -1,0 +1,20 @@
+<script>
+  (function () {
+    try {
+      var savedTheme = null;
+      try {
+        var storage = window.localStorage;
+        savedTheme = storage && storage.getItem("zeropress-theme");
+      } catch (error) {
+        // Storage is optional; preserve the system preference when unavailable.
+      }
+      var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var theme = savedTheme === "dark" || savedTheme === "light" ? savedTheme : (prefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+      document.documentElement.style.colorScheme = theme;
+    } catch (error) {
+      document.documentElement.setAttribute("data-theme", "light");
+      document.documentElement.style.colorScheme = "light";
+    }
+  }());
+</script>

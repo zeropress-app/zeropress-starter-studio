@@ -1,20 +1,70 @@
 <footer class="site-footer">
-  <div class="site-container site-footer__inner">
-    <div class="site-footer__copy">
-      {{#if site.footer.copyright_text}}
-        <p>{{site.footer.copyright_text}}</p>
-      {{#else_if site.title}}
-        <p>{{site.title}}</p>
-      {{/if}}
-      {{#if site.footer.attribution}}
-        <p class="site-footer__attribution">Published with <a href="https://zeropress.app" target="_blank" rel="noreferrer noopener">ZeroPress</a></p>
-      {{/if}}
+  {{#if site.newsletter.enabled}}
+  <section class="footer-cta">
+    <div class="shell footer-cta__inner">
+      <div class="footer-cta__copy">
+        <p class="section-kicker">Newsletter</p>
+        <h2>{{#if site.newsletter.title}}{{site.newsletter.title}}{{#else}}Subscribe{{/if}}</h2>
+        <p>
+          {{#if site.newsletter.description}}{{site.newsletter.description}}{{#else}}Get updates by email.{{/if}}
+        </p>
+      </div>
+      <div class="newsletter-actions" role="group" aria-label="Newsletter sign-up">
+        {{#if site.newsletter.embed_url}}
+        <button class="newsletter-button newsletter-button--modal" type="button" data-newsletter-open>
+          {{#if site.newsletter.button_label}}{{site.newsletter.button_label}}{{#else}}Subscribe{{/if}}
+        </button>
+        {{/if}}
+        {{#if site.newsletter.signup_url}}
+        <a class="newsletter-button newsletter-button--link" href="{{site.newsletter.signup_url}}" target="_blank" rel="noreferrer noopener" data-newsletter-fallback>
+          {{#if site.newsletter.button_label}}{{site.newsletter.button_label}}{{#else}}Subscribe{{/if}}
+        </a>
+        {{/if}}
+      </div>
     </div>
-    <nav class="site-footer__nav" aria-label="Footer navigation">
-      {{menu:footer}}
-    </nav>
+  </section>
+  {{#if site.newsletter.embed_url}}
+  <dialog class="newsletter-modal" data-newsletter-modal aria-labelledby="newsletter-modal-title">
+    <div class="newsletter-modal__backdrop" data-newsletter-close></div>
+    <section class="newsletter-modal__dialog">
+      <div class="newsletter-modal__header">
+        <h2 id="newsletter-modal-title">{{#if site.newsletter.title}}{{site.newsletter.title}}{{#else}}Subscribe{{/if}}</h2>
+        <button class="newsletter-modal__close" type="button" aria-label="Close newsletter sign-up" data-newsletter-close><svg class="icon" width="18" height="18" aria-hidden="true" focusable="false"><use href="#icon-x"/></svg></button>
+      </div>
+      <iframe
+        class="newsletter-modal__frame"
+        src="{{site.newsletter.embed_url}}"
+        title="Newsletter sign-up"
+        loading="lazy"
+        data-zp-newsletter-embed
+        {{#if site.comments.enabled}}
+        data-zp-newsletter-provider="{{site.comments.provider}}"
+        data-zp-newsletter-api-base-url="{{site.comments.api_base_url}}"
+        {{/if}}
+      ></iframe>
+    </section>
+  </dialog>
+  {{/if}}
+  {{/if}}
+
+  <div class="footer-meta">
+    <div class="shell footer-meta__inner">
+      <div class="footer-brand">
+        <p class="footer-title">{{site.title}}</p>
+        <p class="footer-copy">{{site.description}}</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        {{menu:footer}}
+      </nav>
+    </div>
+    <div class="shell footer-quote">
+      <p>
+        {{#if site.footer.copyright_text}}{{site.footer.copyright_text}}. {{/if}}{{#if site.archive.enabled}}<a href="{{site.archive.url}}">Archive</a>. {{/if}}{{#if site.feed.enabled}}<a href="{{site.feed.url}}">RSS feed</a>. {{/if}}{{#if site.url}}<a href="/sitemap.xml">Sitemap</a>. {{/if}}{{#if site.footer.attribution}}Published with <a href="https://zeropress.app" target="_blank" rel="noreferrer noopener">ZeroPress</a>{{/if}}
+      </p>
+    </div>
   </div>
-  <script defer src="/assets/theme.js"></script>
-  {{#if comments.enabled}}<script defer src="/assets/comment-data.js"></script>
-  <script defer src="/assets/comment.js"></script>{{/if}}
 </footer>
+
+<script defer src="/assets/theme.js"></script>
+{{#if comments.enabled}}<script defer src="/assets/comment-data.js"></script>
+<script defer src="/assets/comment.js"></script>{{/if}}

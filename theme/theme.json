@@ -1,24 +1,32 @@
 {
   "$schema": "https://schemas.zeropress.dev/theme-runtime/v0.7/schema.json",
-  "name": "Minimal",
+  "name": "Margin Notes",
   "namespace": "zeropress",
-  "slug": "minimal",
-  "version": "0.7.3",
+  "slug": "blog",
+  "version": "0.7.6",
   "license": "MIT",
   "runtime": "0.7",
-  "description": "A simple blog theme with light and dark colors that follow your system settings.",
+  "description": "Quiet two-column personal blog with system serif headings and a sans-serif body. Title, tagline, top menu, theme toggle, sidebar with blog info and recent posts, post detail with TOC and threaded comments.",
   "features": {
     "comments": true,
-    "post_index": true
+    "search": true
   },
   "menu_slots": {
     "primary": {
       "title": "Primary Menu",
-      "description": "Header navigation"
+      "description": "Header navigation rendered as small uppercase tracked links",
+      "max_depth": 3
     },
     "footer": {
       "title": "Footer Menu",
-      "description": "Compact footer links"
+      "description": "Compact footer link list (legal pages and shortcuts)",
+      "max_depth": 1
+    }
+  },
+  "widget_areas": {
+    "sidebar": {
+      "title": "Sidebar Widgets",
+      "description": "Right-hand sidebar stack on home, archive, taxonomy, post, and page templates"
     }
   }
 }

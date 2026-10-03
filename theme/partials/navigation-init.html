@@ -1,0 +1,104 @@
+<script data-zp-navigation>
+  (function () {
+    const root = document.documentElement;
+    if (root.classList.contains("nav-ready")) return;
+    const desktop = window.matchMedia("(min-width: 640px)");
+
+    function entries(nav) {
+      return Array.from(nav.querySelectorAll(".site-nav__toggle")).map((button) => {
+        const item = button.closest(".site-nav__item");
+        return { button, item, panel: item.querySelector(":scope > .site-nav__submenu") };
+      }).filter((entry) => entry.panel);
+    }
+
+    function collapse({ button, panel }) {
+      button.setAttribute("aria-expanded", "false");
+      panel.removeAttribute("data-nav-open");
+    }
+
+    function close(entry) {
+      entries(entry.item).forEach(collapse);
+    }
+
+    function closeOutside(target) {
+      document.querySelectorAll(".site-nav").forEach((nav) => {
+        if (!nav.contains(target)) entries(nav).forEach(collapse);
+      });
+    }
+
+    function position(entry) {
+      const { panel, item, button } = entry;
+      panel.style.removeProperty("left");
+      panel.style.removeProperty("top");
+      delete button.dataset.opensLeft;
+      if (!desktop.matches || !panel.hasAttribute("data-nav-open")) return;
+
+      const gap = 16;
+      const viewportWidth = document.documentElement.clientWidth;
+      const viewportHeight = document.documentElement.clientHeight;
+      const anchor = item.getBoundingClientRect();
+      const bounds = panel.getBoundingClientRect();
+      const parentPanel = item.closest(".site-nav__submenu");
+      const parentBounds = parentPanel?.getBoundingClientRect();
+      const nested = Boolean(parentPanel);
+      let left = nested ? parentBounds.right : anchor.left;
+      let top = nested ? anchor.top : anchor.bottom + 4;
+      if (nested && left + bounds.width > viewportWidth - gap) {
+        if (parentBounds.left - bounds.width >= gap) {
+          left = parentBounds.left - bounds.width;
+          button.dataset.opensLeft = "true";
+        } else {
+          // Narrow desktop viewports may not fit two panels side by side.
+          // Open below the row so its link, button, and focus ring stay visible.
+          left = anchor.left;
+          top = anchor.bottom + 4;
+        }
+      }
+      left = Math.max(gap, Math.min(left, viewportWidth - bounds.width - gap));
+      if (!nested && top + bounds.height > viewportHeight - gap && anchor.top - bounds.height - 4 >= gap) {
+        top = anchor.top - bounds.height - 4;
+      }
+      top = Math.max(gap, Math.min(top, viewportHeight - bounds.height - gap));
+      panel.style.left = `${left - anchor.left}px`;
+      panel.style.top = `${top - anchor.top}px`;
+    }
+
+    document.addEventListener("click", (event) => {
+      closeOutside(event.target);
+      const button = event.target.closest?.(".site-nav__toggle");
+      const nav = button?.closest(".site-nav");
+      if (!nav) return;
+      const items = entries(nav);
+      const entry = items.find((item) => item.button === button);
+      if (!entry) return;
+      if (button.getAttribute("aria-expanded") === "true") {
+        close(entry);
+        return;
+      }
+      items.filter((sibling) => sibling !== entry && sibling.item.parentElement === entry.item.parentElement).forEach(close);
+      entry.panel.setAttribute("data-nav-open", "");
+      button.setAttribute("aria-expanded", "true");
+      position(entry);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      const nav = event.target.closest?.(".site-nav");
+      if (!nav) return;
+      const deepest = entries(nav).findLast((entry) => entry.panel.hasAttribute("data-nav-open"));
+      if (!deepest) return;
+      event.preventDefault();
+      event.stopPropagation();
+      close(deepest);
+      deepest.button.focus();
+    });
+    document.addEventListener("focusin", (event) => closeOutside(event.target));
+    window.addEventListener("resize", () => {
+      document.querySelectorAll(".site-nav").forEach((nav) => entries(nav).forEach(position));
+    });
+
+    // Enable the collapsed layout only after its controls can respond, before
+    // the navigation is parsed. The full theme script is not required.
+    root.classList.add("nav-ready");
+  }());
+</script>

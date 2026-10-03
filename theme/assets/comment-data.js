@@ -16,7 +16,14 @@ const COMMENT_CHALLENGE_ERROR_CODES = new Set([
 ]);
 const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const TURNSTILE_TIMEOUT_MS = 120000;
+// Supabase remains a lazy, operator-enabled dependency. Pin both the exact
+// browser bundle and its digest so guest comments do not depend on mutable CDN code.
+const SUPABASE_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.5";
+const SUPABASE_SCRIPT_INTEGRITY = "sha384-Fntl9b+IRzm2GKZK0c129fQFknWsn8pyxDejLO4wwds1LF9DSob2K2QXlfw8EIXn";
+const SUPABASE_SCRIPT_TIMEOUT_MS = 15000;
+const SUPABASE_PUBLISHABLE_KEY_PATTERN = /^sb_publishable_[A-Za-z0-9._-]{16,512}$/;
 let turnstileScriptPromise = null;
+let supabaseScriptPromise = null;
 
 class CommentDataError extends Error {
   constructor(messages) {
@@ -112,6 +119,55 @@ class ZeroPressCommentData {
     this.requestToken = config.requestToken;
     this.challengeSettings = normalizeChallengeSettings(config.challenge);
     this.challengeCache = { read: null, write: null };
+    this.identityAdapter = null;
+    this.identityState = createGuestIdentityState(false);
+  }
+
+  async initializeIdentity(onChange) {
+    const notify = typeof onChange === "function" ? onChange : () => {};
+    let discovery;
+    try {
+      discovery = await fetchCommentAuthDiscovery(this);
+    } catch {
+      notify(this.identityState);
+      return this.identityState;
+    }
+
+    if (!discovery) {
+      notify(this.identityState);
+      return this.identityState;
+    }
+
+    try {
+      const adapter = new SupabaseCommentIdentityAdapter(discovery, (state) => {
+        this.identityState = state;
+        notify(state);
+      });
+      this.identityAdapter = adapter;
+      this.identityState = await adapter.initialize();
+      notify(this.identityState);
+    } catch {
+      this.identityAdapter = null;
+      this.identityState = createGuestIdentityState(false);
+      notify(this.identityState);
+    }
+    return this.identityState;
+  }
+
+  getIdentityState() {
+    return { ...this.identityState };
+  }
+
+  async requestIdentitySignIn(email) {
+    if (!this.identityAdapter) {
+      throw new CommentDataError(["Optional sign-in is not available."]);
+    }
+    return this.identityAdapter.requestMagicLink(email);
+  }
+
+  async signOutIdentity() {
+    if (!this.identityAdapter) return this.identityState;
+    return this.identityAdapter.signOut();
   }
 
   async load(page = 1, retryChallenge = true) {
@@ -144,7 +200,8 @@ class ZeroPressCommentData {
   }
 
   async submit(input, retryChallenge = true) {
-    const verificationResult = await this.getWriteVerification();
+    const accessToken = await this.getIdentityAccessToken();
+    const verificationResult = await this.getWriteVerification(input.verificationTarget);
     if (!verificationResult.verification) {
       throw new CommentDataError([
         verificationResult.message || "Comments are temporarily unavailable.",
@@ -161,11 +218,12 @@ class ZeroPressCommentData {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({
           ...(input.parentId ? { parent_id: Number(input.parentId) } : {}),
           author_name: input.authorName,
-          author_email: input.authorEmail,
+          ...(!accessToken ? { author_email: input.authorEmail } : {}),
           content_text: input.content,
           comment_request_token: this.requestToken,
           ...verificationResult.verification.body,
@@ -190,7 +248,12 @@ class ZeroPressCommentData {
     return { publication: payload.publication };
   }
 
-  async getWriteVerification() {
+  async getIdentityAccessToken() {
+    if (!this.identityAdapter) return "";
+    return this.identityAdapter.getAccessToken();
+  }
+
+  async getWriteVerification(verificationTarget) {
     const settings = this.challengeSettings.write;
     let lastMessage = "Comment verification took too long. Try again.";
 
@@ -203,7 +266,7 @@ class ZeroPressCommentData {
       const descriptor = descriptorResult.descriptor;
       if (descriptor.mode === "turnstile") {
         try {
-          const token = await executeTurnstile(descriptor.turnstile);
+          const token = await executeTurnstile(descriptor.turnstile, verificationTarget);
           return {
             verification: {
               mode: "turnstile",
@@ -275,6 +338,163 @@ class ZeroPressCommentData {
 
     return lastResult;
   }
+}
+
+class SupabaseCommentIdentityAdapter {
+  constructor(config, onChange) {
+    this.config = config;
+    this.onChange = onChange;
+    this.client = null;
+    this.state = createGuestIdentityState(true);
+    this.subscription = null;
+  }
+
+  async initialize() {
+    await loadSupabaseApi();
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("Supabase Auth is unavailable.");
+    }
+
+    this.client = window.supabase.createClient(
+      this.config.projectUrl,
+      this.config.publishableKey,
+      {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+      },
+    );
+
+    const sessionResult = await this.client.auth.getSession();
+    if (sessionResult?.error) throw sessionResult.error;
+    this.setSession(sessionResult?.data?.session ?? null);
+
+    const authChangeResult = this.client.auth.onAuthStateChange((_event, session) => {
+      this.setSession(session ?? null);
+    });
+    this.subscription = authChangeResult?.data?.subscription ?? null;
+    return this.state;
+  }
+
+  async requestMagicLink(value) {
+    const email = normalizeAuthEmail(value);
+    if (!email) {
+      throw new CommentDataError(["Enter a valid email address to sign in."]);
+    }
+    if (!this.client) {
+      throw new CommentDataError(["Optional sign-in is not available."]);
+    }
+
+    const result = await this.client.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: createAuthRedirectUrl(),
+      },
+    });
+    if (result?.error) {
+      throw new CommentDataError([result.error.message || "Unable to send the sign-in link."]);
+    }
+
+    this.state = {
+      ...createGuestIdentityState(true),
+      notice: "Check your email for a sign-in link.",
+    };
+    this.notify();
+    return this.state;
+  }
+
+  async signOut() {
+    if (this.client) {
+      const result = await this.client.auth.signOut();
+      if (result?.error) {
+        throw new CommentDataError([result.error.message || "Unable to sign out."]);
+      }
+    }
+    this.setSession(null);
+    return this.state;
+  }
+
+  async getAccessToken() {
+    if (!this.state.signedIn) return "";
+    if (!this.client) {
+      throw new CommentDataError(["Your sign-in session is unavailable. Sign out or sign in again."]);
+    }
+
+    const result = await this.client.auth.getSession();
+    if (result?.error) {
+      throw new CommentDataError(["Your sign-in session expired. Sign out or sign in again."]);
+    }
+    const session = result?.data?.session ?? null;
+    if (!session || typeof session.access_token !== "string" || !session.access_token) {
+      this.setSession(null);
+      throw new CommentDataError(["Your sign-in session expired. Sign in again or continue as a guest."]);
+    }
+    this.setSession(session);
+    return session.access_token;
+  }
+
+  setSession(session) {
+    const user = session?.user;
+    if (!user || user.is_anonymous === true || typeof session.access_token !== "string") {
+      this.state = createGuestIdentityState(true);
+      this.notify();
+      return;
+    }
+
+    const email = normalizeAuthEmail(user.email) || "";
+    this.state = {
+      available: true,
+      provider: "supabase",
+      signedIn: true,
+      email,
+      displayName: normalizeAuthDisplayName(user, email),
+      notice: email ? "" : "This account does not provide an email address required for comments.",
+    };
+    this.notify();
+  }
+
+  notify() {
+    if (typeof this.onChange === "function") {
+      this.onChange({ ...this.state });
+    }
+  }
+}
+
+function createGuestIdentityState(available) {
+  return {
+    available: Boolean(available),
+    provider: available ? "supabase" : "",
+    signedIn: false,
+    email: "",
+    displayName: "",
+    notice: "",
+  };
+}
+
+function normalizeAuthEmail(value) {
+  const email = typeof value === "string" ? value.trim().toLowerCase() : "";
+  return email && email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ? email
+    : "";
+}
+
+function normalizeAuthDisplayName(user, email) {
+  const metadata = user && typeof user.user_metadata === "object" ? user.user_metadata : {};
+  const candidates = [metadata.full_name, metadata.name, metadata.user_name];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim().slice(0, 80);
+    }
+  }
+  return email ? email.split("@")[0].slice(0, 80) : "";
+}
+
+function createAuthRedirectUrl() {
+  const url = new URL(window.location.href || window.location.origin);
+  url.hash = "";
+  return url.toString();
 }
 
 function createCommentData(config = {}) {
@@ -459,6 +679,7 @@ function normalizeWordPressComment(comment) {
     id,
     parentId,
     authorName: String(comment.author_name || ""),
+    authorKind: "guest",
     createdAt,
     contentText,
   };
@@ -496,9 +717,15 @@ function normalizeZeroPressComment(comment) {
     id,
     parentId,
     authorName: comment.author_name,
+    authorKind: normalizeCommentAuthorKind(comment.author_kind),
     createdAt,
     contentText: comment.content_text,
   };
+}
+
+function normalizeCommentAuthorKind(value) {
+  if (value === "site_user" || value === "authenticated_user") return value;
+  return "guest";
 }
 
 function normalizeCommentDate(value) {
@@ -629,6 +856,65 @@ function buildZeroPressChallengeEndpoint(config, scope) {
   }
 }
 
+function buildZeroPressAuthDiscoveryEndpoint(config) {
+  try {
+    const url = new URL(config.apiBaseUrl, window.location.origin);
+    const basePath = url.pathname.replace(/\/+$/, "");
+    url.pathname = `${basePath}/comments/auth`;
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    throw new CommentDataError(["The comment API base URL is invalid."]);
+  }
+}
+
+async function fetchCommentAuthDiscovery(config) {
+  const response = await fetchJson(buildZeroPressAuthDiscoveryEndpoint(config));
+  if (!response.ok) return null;
+  const payload = unwrapZeroPressApiData(response.payload);
+  if (!payload || payload.enabled !== true) return null;
+  if (payload.provider !== "supabase" || payload.mode !== "optional") return null;
+
+  const projectUrl = normalizeSupabaseProjectUrl(payload.project_url);
+  const publishableKey = typeof payload.publishable_key === "string" &&
+    SUPABASE_PUBLISHABLE_KEY_PATTERN.test(payload.publishable_key)
+    ? payload.publishable_key
+    : "";
+  return projectUrl && publishableKey ? { projectUrl, publishableKey } : null;
+}
+
+function normalizeSupabaseProjectUrl(value) {
+  if (
+    typeof value !== "string" ||
+    value !== value.trim() ||
+    /[\u0000-\u0020\u007f\\]/.test(value)
+  ) {
+    return "";
+  }
+
+  try {
+    const url = new URL(value);
+    const isLoopback = url.hostname === "localhost" ||
+      url.hostname === "127.0.0.1" ||
+      url.hostname === "[::1]";
+    if (
+      (url.protocol !== "https:" && !(url.protocol === "http:" && isLoopback)) ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash ||
+      url.origin === "null"
+    ) {
+      return "";
+    }
+    return url.origin;
+  } catch {
+    return "";
+  }
+}
+
 function normalizeChallengeSettings(challenge = {}) {
   return {
     read: {
@@ -752,7 +1038,7 @@ function normalizeWriteVerificationDescriptor(payload, scope, action, algorithm)
   return null;
 }
 
-async function executeTurnstile(config) {
+async function executeTurnstile(config, verificationTarget) {
   await loadTurnstileApi();
   if (!window.turnstile || typeof window.turnstile.render !== "function") {
     throw new Error("Turnstile verification is not available.");
@@ -760,7 +1046,10 @@ async function executeTurnstile(config) {
 
   const container = document.createElement("div");
   container.dataset.zpTurnstile = "";
-  document.body.appendChild(container);
+  const host = verificationTarget && typeof verificationTarget.appendChild === "function"
+    ? verificationTarget
+    : document.body;
+  host.appendChild(container);
 
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -842,6 +1131,48 @@ function loadTurnstileApi() {
     }
   });
   return turnstileScriptPromise;
+}
+
+function loadSupabaseApi() {
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    return Promise.resolve();
+  }
+  if (supabaseScriptPromise) return supabaseScriptPromise;
+
+  supabaseScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${SUPABASE_SCRIPT_URL}"]`);
+    const script = existing || document.createElement("script");
+    let settled = false;
+    const timeout = setTimeout(
+      () => finish(new Error("Supabase Auth loading timed out.")),
+      SUPABASE_SCRIPT_TIMEOUT_MS,
+    );
+
+    function finish(error) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if (error || !window.supabase || typeof window.supabase.createClient !== "function") {
+        supabaseScriptPromise = null;
+        if (!existing) script.remove();
+        reject(error || new Error("Supabase Auth is unavailable."));
+        return;
+      }
+      resolve();
+    }
+
+    script.addEventListener("load", () => finish(null), { once: true });
+    script.addEventListener("error", () => finish(new Error("Supabase Auth is unavailable.")), { once: true });
+    if (!existing) {
+      script.src = SUPABASE_SCRIPT_URL;
+      script.integrity = SUPABASE_SCRIPT_INTEGRITY;
+      script.crossOrigin = "anonymous";
+      script.referrerPolicy = "no-referrer";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  });
+  return supabaseScriptPromise;
 }
 
 function isCommentChallengeError(payload) {

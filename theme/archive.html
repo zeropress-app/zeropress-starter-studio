@@ -1,19 +1,27 @@
-<section class="site-container intro">
+<section class="narrow-intro">
   <p class="eyebrow">Archive</p>
-  <h1>Everything, in order</h1>
+  <h1>Everything, by date</h1>
+  <p class="lede">All published writing in one place — grouped by month, oldest sections collapsed by year.</p>
 </section>
-<section class="site-container post-section">
-  {{#for group in archive.groups}}
-    <section class="archive-group">
-      <h2 class="archive-group__label">{{group.label}}</h2>
-      <ul class="archive-list">
-        {{#for post in group.items}}
-          <li class="archive-list__item">
-            <a href="{{post.url}}">{{post.title}}</a>
-            <time datetime="{{post.published_at_iso}}">{{post.published_at}}</time>
-          </li>
-        {{/for}}
-      </ul>
-    </section>
-  {{/for}}
+<section class="content-grid content-grid--balanced">
+  <div class="posts-area">
+    <div class="archive-list">
+      {{#for group in archive.groups}}
+        <section class="archive-group">
+          <h2>{{group.label}}</h2>
+          <ul class="archive-group__list">
+            {{#for post in group.items}}
+              {{partial:post-list-item variant="archive" show_excerpt=false}}
+            {{/for}}
+          </ul>
+        </section>
+      {{/for}}
+    </div>
+    {{partial:pagination}}
+  </div>
+  {{#if widgets.sidebar.items}}
+    <aside class="sidebar-stack">
+      {{partial:sidebar-widgets}}
+    </aside>
+  {{/if}}
 </section>

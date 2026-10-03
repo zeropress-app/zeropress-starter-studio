@@ -2,20 +2,31 @@
 "use strict";
 
 function createDateFormatter(options) {
+  const styles = {};
+  if (options.dateStyle && options.dateStyle !== "none") {
+    styles.dateStyle = options.dateStyle;
+  }
+  if (options.timeStyle && options.timeStyle !== "none") {
+    styles.timeStyle = options.timeStyle;
+  }
+  if (!Object.keys(styles).length) {
+    return { format: () => "" };
+  }
+
   if (!window.Intl || !Intl.DateTimeFormat) {
     return null;
   }
 
   try {
-    return new Intl.DateTimeFormat(undefined, options);
+    return new Intl.DateTimeFormat(undefined, styles);
   } catch {
     return null;
   }
 }
 
 const localDateTimeFormatter = createDateFormatter({
-  dateStyle: "medium",
-  timeStyle: "short",
+  dateStyle: document.documentElement.dataset.zpDateStyle || "medium",
+  timeStyle: document.documentElement.dataset.zpTimeStyle || "none",
 });
 
 function enhanceTimeElement(time, formatter) {
@@ -369,9 +380,10 @@ function createReplyFormFragment(node, templates, formValues = null) {
   return fragment;
 }
 
-function createCommentItemFragment(node, templates, replyState, settings, depth = 0, formValues = null) {
+function createCommentItemFragment(node, templates, replyState, settings, depth = 0, formDrafts = new Map()) {
   const fragment = cloneTemplateFragment(templates.item);
   const authorTarget = getRequiredCommentRole(fragment, "author", "comment item template");
+  const authorBadgeTarget = getCommentRole(fragment, "author-badge");
   const dateTarget = getRequiredCommentRole(fragment, "date", "comment item template");
   const contentTarget = getRequiredCommentRole(fragment, "content", "comment item template");
   const replyFormTarget = getRequiredCommentRole(fragment, "reply-form", "comment item template");
@@ -382,6 +394,17 @@ function createCommentItemFragment(node, templates, replyState, settings, depth 
   }
 
   authorTarget.textContent = String(node.authorName || "");
+  if (authorBadgeTarget instanceof HTMLElement && node.authorKind === "site_user") {
+    authorBadgeTarget.textContent = "Site author";
+    authorBadgeTarget.hidden = false;
+    authorBadgeTarget.setAttribute("aria-label", "Verified site author");
+    authorBadgeTarget.setAttribute("title", "Verified site author");
+  } else if (authorBadgeTarget instanceof HTMLElement && node.authorKind === "authenticated_user") {
+    authorBadgeTarget.textContent = "Signed-in user";
+    authorBadgeTarget.hidden = false;
+    authorBadgeTarget.setAttribute("aria-label", "Authenticated user");
+    authorBadgeTarget.setAttribute("title", "Authenticated user");
+  }
   const machineDate = String(node.createdAt || "");
   dateTarget.textContent = machineDate;
   if (dateTarget instanceof HTMLTimeElement && machineDate) {
@@ -419,10 +442,7 @@ function createCommentItemFragment(node, templates, replyState, settings, depth 
   }
 
   if (canReply && replyState.activeCommentId === String(node.id || "")) {
-    const activeFormValues = formValues &&
-      String(formValues.parent || "") === String(node.id || "")
-      ? formValues
-      : null;
+    const activeFormValues = formDrafts.get(String(node.id || "")) || null;
     const replyFormFragment = createReplyFormFragment(node, templates, activeFormValues);
     if (replyFormFragment) {
       replyFormTarget.append(replyFormFragment);
@@ -431,7 +451,7 @@ function createCommentItemFragment(node, templates, replyState, settings, depth 
 
   if (Array.isArray(node.children) && node.children.length > 0) {
     node.children.forEach((childNode) => {
-      const childFragment = createCommentItemFragment(childNode, templates, replyState, settings, depth + 1, formValues);
+      const childFragment = createCommentItemFragment(childNode, templates, replyState, settings, depth + 1, formDrafts);
       if (childFragment) {
         repliesTarget.append(childFragment);
       }
@@ -441,14 +461,14 @@ function createCommentItemFragment(node, templates, replyState, settings, depth 
   return fragment;
 }
 
-function createCommentListFragment(comments, templates, replyState, settings, formValues = null) {
+function createCommentListFragment(comments, templates, replyState, settings, formDrafts) {
   if (!Array.isArray(comments) || comments.length === 0) {
     return cloneTemplateFragment(templates.empty);
   }
 
   const fragment = document.createDocumentFragment();
   buildCommentDisplayTree(comments, settings).forEach((rootNode) => {
-    const itemFragment = createCommentItemFragment(rootNode, templates, replyState, settings, 0, formValues);
+    const itemFragment = createCommentItemFragment(rootNode, templates, replyState, settings, 0, formDrafts);
     if (itemFragment) {
       fragment.append(itemFragment);
     }
@@ -468,7 +488,7 @@ function createCommentsShellFragment(templates, options) {
     pagination = null,
     replyState = { activeCommentId: null },
     commentSettings = { threadComments: true, threadDepth: 2 },
-    formValues = null,
+    formDrafts = new Map(),
   } = options;
 
   const shellFragment = cloneTemplateFragment(templates.shell);
@@ -508,7 +528,7 @@ function createCommentsShellFragment(templates, options) {
     const formFragment = cloneTemplateFragment(templates.form);
     const form = validateCommentFormFragment(formFragment, {
       parentId: "",
-      values: formValues && !String(formValues.parent || "") ? formValues : null,
+      values: formDrafts.get("") || null,
     });
     if (!form) {
       return null;
@@ -519,7 +539,7 @@ function createCommentsShellFragment(templates, options) {
   }
 
   if (showList) {
-    listTarget.replaceChildren(createCommentListFragment(comments, templates, replyState, commentSettings, formValues));
+    listTarget.replaceChildren(createCommentListFragment(comments, templates, replyState, commentSettings, formDrafts));
   } else {
     listTarget.replaceChildren();
   }
@@ -591,6 +611,171 @@ function getCommentSettings(mount) {
   };
 }
 
+function createDefaultCommentIdentityState() {
+  return {
+    available: false,
+    provider: "",
+    signedIn: false,
+    email: "",
+    displayName: "",
+    notice: "",
+  };
+}
+
+function readCommentFormValues(form) {
+  const values = {};
+  for (const name of ["parent", "author_name", "author_email", "content"]) {
+    values[name] = String(form.querySelector(`[name="${name}"]`)?.value || "");
+  }
+  return values;
+}
+
+function captureCommentFormValues(mount, preferredParentId = "") {
+  if (!(mount instanceof HTMLElement)) return null;
+  const forms = Array.from(mount.querySelectorAll("[data-zp-comment-form]"))
+    .filter((element) => element instanceof HTMLFormElement);
+  const activeForm = document.activeElement?.closest?.("[data-zp-comment-form]");
+  const preferred = forms.find((form) => {
+    const parent = form.querySelector('[name="parent"]');
+    return parent instanceof HTMLInputElement && parent.value === preferredParentId;
+  });
+  const form = activeForm instanceof HTMLFormElement && mount.contains(activeForm)
+    ? activeForm
+    : preferred || forms[0];
+  if (!(form instanceof HTMLFormElement)) return null;
+
+  return readCommentFormValues(form);
+}
+
+function getCommentDraftStorageKey(mount) {
+  if (!(mount instanceof HTMLElement)) return "";
+  const type = String(mount.dataset.zpCommentsTargetType || "");
+  const id = String(mount.dataset.zpCommentsTargetPublicId || "");
+  return type && id ? `zeropress:comment-draft:v1:${type}:${id}` : "";
+}
+
+function storeCommentDraft(mount, values) {
+  const key = getCommentDraftStorageKey(mount);
+  if (!key || !values) return;
+  try {
+    window.sessionStorage?.setItem(key, JSON.stringify(values));
+  } catch {
+    // Session storage is an optional best-effort convenience.
+  }
+}
+
+function restoreCommentDraft(mount) {
+  const key = getCommentDraftStorageKey(mount);
+  if (!key) return null;
+  try {
+    const value = JSON.parse(window.sessionStorage?.getItem(key) || "null");
+    if (!value || typeof value !== "object") return null;
+    return {
+      parent: typeof value.parent === "string" ? value.parent : "",
+      author_name: typeof value.author_name === "string" ? value.author_name : "",
+      author_email: typeof value.author_email === "string" ? value.author_email : "",
+      content: typeof value.content === "string" ? value.content : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function clearCommentDraft(mount) {
+  const key = getCommentDraftStorageKey(mount);
+  if (!key) return;
+  try {
+    window.sessionStorage?.removeItem(key);
+  } catch {
+    // Session storage is an optional best-effort convenience.
+  }
+}
+
+function applyCommentIdentityToForms(mount, state) {
+  if (!(mount instanceof HTMLElement)) return;
+  const signedIn = Boolean(state?.available && state.signedIn);
+  mount.querySelectorAll('[data-role="guest-email-field"]').forEach((field) => {
+    if (field instanceof HTMLElement) field.hidden = signedIn;
+  });
+  mount.querySelectorAll('input[name="author_email"]').forEach((input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    input.required = !signedIn;
+    input.disabled = signedIn;
+  });
+  if (signedIn && state.displayName) {
+    mount.querySelectorAll('input[name="author_name"]').forEach((input) => {
+      if (input instanceof HTMLInputElement && !input.value.trim()) {
+        input.value = state.displayName;
+      }
+    });
+  }
+}
+
+function renderCommentIdentityPanel(mount, state, actions, errorMessage = "") {
+  if (!(mount instanceof HTMLElement)) return;
+  const target = mount.querySelector('[data-role="identity"]');
+  if (!(target instanceof HTMLElement)) return;
+  target.replaceChildren();
+  target.hidden = !state?.available;
+  if (!state?.available) return;
+
+  const copy = document.createElement("p");
+  copy.className = "zp-comments__identity-copy";
+  const controls = document.createElement("div");
+  controls.className = "zp-comments__identity-controls";
+
+  if (state.signedIn) {
+    copy.textContent = state.email
+      ? `Signed in as ${state.email}`
+      : "Signed in with Supabase";
+    const signOut = document.createElement("button");
+    signOut.type = "button";
+    signOut.className = "zp-comment-form__secondary";
+    signOut.textContent = "Sign out";
+    signOut.addEventListener("click", () => actions.onSignOut());
+    controls.append(signOut);
+  } else {
+    copy.textContent = "Sign in by email for an authenticated-user badge, or continue as a guest.";
+    const form = document.createElement("form");
+    form.className = "zp-comments__identity-form";
+    const label = document.createElement("label");
+    label.className = "zp-comment-form__field";
+    const labelText = document.createElement("span");
+    labelText.textContent = "Sign-in email";
+    const email = document.createElement("input");
+    email.type = "email";
+    email.name = "identity_email";
+    email.required = true;
+    email.autocomplete = "email";
+    email.placeholder = "name@example.com";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "zp-comment-form__secondary";
+    submit.textContent = "Email me a sign-in link";
+    label.append(labelText, email);
+    form.append(label, submit);
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submit.disabled = true;
+      try {
+        await actions.onSignIn(email.value);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    controls.append(form);
+  }
+
+  target.append(copy, controls);
+  const message = errorMessage || String(state.notice || "");
+  if (message) {
+    const feedback = document.createElement("p");
+    feedback.className = errorMessage ? "zp-comment-error" : "zp-comments__identity-notice";
+    feedback.textContent = message;
+    target.append(feedback);
+  }
+}
+
 class CommentController {
   constructor(mount, commentData) {
     this.mount = mount;
@@ -612,10 +797,39 @@ class CommentController {
     let totalPages = 1;
     let totalComments = 0;
     let isLoadingMore = false;
+    let hasLoadedComments = false;
+    let identityState = createDefaultCommentIdentityState();
+    let identityErrorMessage = "";
+    const restoredDraft = restoreCommentDraft(mount);
+    const formDrafts = new Map();
+    if (restoredDraft) formDrafts.set(restoredDraft.parent, restoredDraft);
     const commentSettings = getCommentSettings(mount);
 
     const replyState = {
-      activeCommentId: null,
+      activeCommentId: restoredDraft?.parent || null,
+    };
+
+    const captureFormDrafts = () => {
+      mount.querySelectorAll("[data-zp-comment-form]").forEach((form) => {
+        if (!(form instanceof HTMLFormElement)) return;
+        const values = readCommentFormValues(form);
+        formDrafts.set(values.parent, values);
+      });
+    };
+
+    const clearSubmittedDraft = (submitted) => {
+      captureFormDrafts();
+      const draft = formDrafts.get(submitted.parent);
+      // Edits made while a request is pending belong to the next comment.
+      if (!draft || Object.keys(submitted).some((key) => draft[key] !== submitted[key])) return;
+      formDrafts.delete(submitted.parent);
+      mount.querySelectorAll("[data-zp-comment-form]").forEach((form) => {
+        if (form instanceof HTMLFormElement && readCommentFormValues(form).parent === submitted.parent) {
+          form.reset();
+        }
+      });
+      if (replyState.activeCommentId === submitted.parent) replyState.activeCommentId = null;
+      if (restoreCommentDraft(mount)?.parent === submitted.parent) clearCommentDraft(mount);
     };
 
     const focusReplyForm = (commentId) => {
@@ -636,12 +850,39 @@ class CommentController {
       }
     };
 
+    const renderIdentityState = () => {
+      renderCommentIdentityPanel(mount, identityState, {
+        onSignIn: async (email) => {
+          captureFormDrafts();
+          storeCommentDraft(mount, captureCommentFormValues(mount, replyState.activeCommentId || ""));
+          identityErrorMessage = "";
+          try {
+            await commentData.requestIdentitySignIn(email);
+          } catch (error) {
+            identityErrorMessage = getCommentDataErrorMessages(error)[0] || "Unable to send the sign-in link.";
+          }
+          renderIdentityState();
+        },
+        onSignOut: async () => {
+          captureFormDrafts();
+          identityErrorMessage = "";
+          try {
+            await commentData.signOutIdentity();
+          } catch (error) {
+            identityErrorMessage = getCommentDataErrorMessages(error)[0] || "Unable to sign out.";
+          }
+          renderIdentityState();
+        },
+      }, identityErrorMessage);
+      applyCommentIdentityToForms(mount, identityState);
+    };
+
     const renderLoadedState = (options = {}) => {
+      captureFormDrafts();
       const {
         errors = [],
         successMessage = "",
         focusReplyCommentId = "",
-        formValues = null,
       } = options;
       const shellFragment = createCommentsShellFragment(templates, {
         comments: currentComments,
@@ -657,7 +898,7 @@ class CommentController {
         showForm: true,
         replyState,
         commentSettings,
-        formValues,
+        formDrafts,
       });
       if (!shellFragment) {
         mount.hidden = true;
@@ -667,6 +908,7 @@ class CommentController {
 
       mount.replaceChildren(shellFragment);
       mount.hidden = false;
+      renderIdentityState();
       bindCommentInteractions();
 
       if (focusReplyCommentId) {
@@ -705,7 +947,10 @@ class CommentController {
       try {
         result = await commentData.load(page);
       } catch (error) {
-        renderErrorState(getCommentDataErrorMessages(error));
+        isLoadingMore = false;
+        const errors = getCommentDataErrorMessages(error);
+        if (hasLoadedComments) renderLoadedState({ errors });
+        else renderErrorState(errors);
         return false;
       }
 
@@ -715,6 +960,7 @@ class CommentController {
       currentPage = result.pagination?.currentPage || page;
       totalPages = result.pagination?.totalPages || currentPage;
       totalComments = result.pagination?.totalComments ?? currentComments.length;
+      hasLoadedComments = true;
 
       if (
         replyState.activeCommentId &&
@@ -818,12 +1064,9 @@ class CommentController {
             formData.delete("parent");
           }
 
-          const submittedFormValues = {
-            parent: normalizedParentId > 0 ? String(normalizedParentId) : "",
-            author_name: String(formData.get("author_name") || ""),
-            author_email: String(formData.get("author_email") || ""),
-            content: String(formData.get("content") || ""),
-          };
+          const submittedFormValues = readCommentFormValues(form);
+          submittedFormValues.parent = normalizedParentId > 0 ? String(normalizedParentId) : "";
+          captureFormDrafts();
 
           const websiteField = formData.get("website");
           if (typeof websiteField === "string" && websiteField.trim()) {
@@ -835,23 +1078,24 @@ class CommentController {
 
           let result;
           try {
+            const verificationTarget = form.querySelector('[data-role="write-verification"]');
             result = await commentData.submit({
               parentId: submittedFormValues.parent,
               authorName: submittedFormValues.author_name,
               authorEmail: submittedFormValues.author_email,
               content: submittedFormValues.content,
+              verificationTarget,
             });
           } catch (error) {
             replyState.activeCommentId = submittedFormValues.parent || null;
             renderLoadedState({
               errors: getCommentDataErrorMessages(error),
               focusReplyCommentId: submittedFormValues.parent,
-              formValues: submittedFormValues,
             });
             return;
           }
 
-          replyState.activeCommentId = null;
+          clearSubmittedDraft(submittedFormValues);
           const wasPublished = result.publication === "published";
           const successMessage = commentSuccessMessage(wasPublished);
 
@@ -870,6 +1114,16 @@ class CommentController {
     };
 
     void loadComments();
+    if (typeof commentData.initializeIdentity === "function") {
+      void commentData.initializeIdentity((nextState) => {
+        captureFormDrafts();
+        identityState = nextState || createDefaultCommentIdentityState();
+        identityErrorMessage = "";
+        if (hasLoadedComments) {
+          renderIdentityState();
+        }
+      });
+    }
   }
 }
 
