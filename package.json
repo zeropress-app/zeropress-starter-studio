@@ -29,6 +29,9 @@
   "devDependencies": {
     "jsonc-parser": "3.3.1",
     "pagefind": "1.5.2",
-    "wrangler": "4.146.0"
+    "wrangler": "4.148.0"
+  },
+  "overrides": {
+    "sharp": "0.35.5"
   }
 }
