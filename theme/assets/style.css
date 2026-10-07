@@ -594,7 +594,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: color .15s;
 }
 .pagination a:hover { color: var(--tab-terracotta); }
-.pagination .disabled { opacity: .35; pointer-events: none; }
+.pagination .disabled { pointer-events: none; }
 .pagination .pages { display: inline-flex; gap: .25rem; }
 .page-link {
   display: inline-flex; align-items: center; justify-content: center;
@@ -1751,8 +1751,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--ink-light);
   margin: 0;
 }
-.footer-quote a { color: var(--tab-terracotta); }
-.footer-quote a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.footer-quote a { color: var(--tab-terracotta); text-decoration: underline; text-underline-offset: 3px; }
+.footer-quote a:hover,
+.footer-quote a:focus-visible { text-decoration-thickness: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   html.is-scroll-enhanced { scroll-behavior: auto; }
