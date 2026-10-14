@@ -3,7 +3,7 @@
   "name": "Margin Notes",
   "namespace": "zeropress",
   "slug": "blog",
-  "version": "0.7.6",
+  "version": "0.7.8",
   "license": "MIT",
   "runtime": "0.7",
   "description": "Quiet two-column personal blog with system serif headings and a sans-serif body. Title, tagline, top menu, theme toggle, sidebar with blog info and recent posts, post detail with TOC and threaded comments.",

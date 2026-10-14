@@ -428,7 +428,7 @@ function createCommentItemFragment(node, templates, replyState, settings, depth 
   }
 
   const replyButton = fragment.querySelector('[data-action="reply"]');
-  const canReply = settings.threadComments && depth < settings.threadDepth - 1;
+  const canReply = settings.canWrite !== false && settings.threadComments && depth < settings.threadDepth - 1;
   if (replyButton instanceof HTMLButtonElement) {
     if (!canReply) {
       replyButton.remove();
@@ -503,6 +503,7 @@ function createCommentsShellFragment(templates, options) {
   const countTarget = getCommentRole(shellFragment, "count");
   if (countTarget) {
     countTarget.textContent = String(commentCount);
+    countTarget.hidden = !showList;
   }
 
   const paginationTarget = getCommentRole(shellFragment, "pagination");
@@ -804,6 +805,9 @@ class CommentController {
     const formDrafts = new Map();
     if (restoredDraft) formDrafts.set(restoredDraft.parent, restoredDraft);
     const commentSettings = getCommentSettings(mount);
+    let writing = { canWrite: typeof commentData.loadWritePolicy !== 'function', reason: 'loading', error: '' };
+    let isSubmitting = false;
+    let isCheckingPolicy = false;
 
     const replyState = {
       activeCommentId: restoredDraft?.parent || null,
@@ -895,9 +899,9 @@ class CommentController {
           totalComments,
           loading: isLoadingMore,
         },
-        showForm: true,
+        showForm: writing.canWrite,
         replyState,
-        commentSettings,
+        commentSettings: { ...commentSettings, canWrite: writing.canWrite },
         formDrafts,
       });
       if (!shellFragment) {
@@ -908,6 +912,33 @@ class CommentController {
 
       mount.replaceChildren(shellFragment);
       mount.hidden = false;
+      const policySlot = mount.querySelector('[data-role="writing-policy"]');
+      if (policySlot && typeof commentData.loadWritePolicy === 'function') {
+        const reasons = {
+          loading: 'Checking comment writing options…',
+          read_only: 'Comment writing is turned off. You can still read the comments.',
+          login_required: 'WordPress requires sign-in to write comments. Comments are read-only here.',
+          comments_closed: 'Comment writing is closed for this page.',
+        };
+        policySlot.hidden = writing.canWrite && !writing.error;
+        policySlot.replaceChildren();
+        const message = document.createElement('p');
+        message.textContent = writing.error || reasons[writing.reason] || '';
+        policySlot.append(message);
+        if (writing.error) {
+          const retry = document.createElement('button');
+          retry.type = 'button';
+          retry.className = 'zp-comments__load-more';
+          retry.textContent = 'Retry writing options';
+          retry.disabled = isCheckingPolicy;
+          retry.addEventListener('click', () => { void loadWritingPolicy(true); });
+          policySlot.append(retry);
+        }
+      }
+      if (!writing.canWrite && currentComments.length === 0) {
+        const empty = mount.querySelector('.zp-comments-empty');
+        if (empty) empty.textContent = 'No comments yet.';
+      }
       renderIdentityState();
       bindCommentInteractions();
 
@@ -974,6 +1005,17 @@ class CommentController {
       return true;
     };
 
+    const loadWritingPolicy = async (refresh = false) => {
+      if (typeof commentData.loadWritePolicy !== 'function' || isCheckingPolicy) return;
+      isCheckingPolicy = true;
+      writing = { canWrite: false, reason: 'loading', error: '' };
+      if (hasLoadedComments) renderLoadedState();
+      try { writing = { ...await commentData.loadWritePolicy({ refresh }), error: '' }; }
+      catch (error) { writing = { canWrite: false, reason: 'error', error: getCommentDataErrorMessages(error)[0] }; }
+      finally { isCheckingPolicy = false; }
+      if (hasLoadedComments) renderLoadedState();
+    };
+
     const bindCommentInteractions = () => {
       const replyButtons = Array.from(mount.querySelectorAll('[data-action="reply"]'))
         .filter((element) => element instanceof HTMLButtonElement);
@@ -1023,7 +1065,7 @@ class CommentController {
 
         button.dataset.loadMoreReady = "true";
         button.addEventListener("click", async () => {
-          if (isLoadingMore || currentPage >= totalPages) {
+          if (isSubmitting || isLoadingMore || currentPage >= totalPages) {
             return;
           }
 
@@ -1046,6 +1088,9 @@ class CommentController {
         .filter((element) => element instanceof HTMLFormElement);
 
       forms.forEach((form) => {
+        form.querySelectorAll('[type="submit"]').forEach((button) => {
+          button.disabled = isLoadingMore;
+        });
         if (form.dataset.commentFormReady === "true") {
           return;
         }
@@ -1053,6 +1098,7 @@ class CommentController {
         form.dataset.commentFormReady = "true";
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
+          if (isSubmitting || isLoadingMore || !writing.canWrite) return;
 
           const parentIdField = form.querySelector('[name="parent"]');
           const parentId = parentIdField instanceof HTMLInputElement ? parentIdField.value.trim() : "";
@@ -1077,6 +1123,10 @@ class CommentController {
           }
 
           let result;
+          isSubmitting = true;
+          form.setAttribute('aria-busy', 'true');
+          const locked = [...mount.querySelectorAll('button, input, textarea')].map(element => [element, element.disabled]);
+          locked.forEach(([element]) => { element.disabled = true; });
           try {
             const verificationTarget = form.querySelector('[data-role="write-verification"]');
             result = await commentData.submit({
@@ -1087,12 +1137,17 @@ class CommentController {
               verificationTarget,
             });
           } catch (error) {
+            await loadWritingPolicy(true);
             replyState.activeCommentId = submittedFormValues.parent || null;
             renderLoadedState({
               errors: getCommentDataErrorMessages(error),
               focusReplyCommentId: submittedFormValues.parent,
             });
             return;
+          } finally {
+            isSubmitting = false;
+            form.removeAttribute('aria-busy');
+            locked.forEach(([element, disabled]) => { element.disabled = disabled; });
           }
 
           clearSubmittedDraft(submittedFormValues);
@@ -1114,6 +1169,7 @@ class CommentController {
     };
 
     void loadComments();
+    void loadWritingPolicy();
     if (typeof commentData.initializeIdentity === "function") {
       void commentData.initializeIdentity((nextState) => {
         captureFormDrafts();
