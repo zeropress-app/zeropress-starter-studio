@@ -1,5 +1,9 @@
 # ZeroPress Site Starter for Studio
 
+> [!IMPORTANT]
+> We recommend a private repository for your site's content and settings.
+> On Cloudflare's setup page, select **Create private Git repository**.
+
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/zeropress-app/zeropress-starter-studio/tree/latest)
 
 A static site published from [ZeroPress Studio](https://github.com/zeropress-app/zeropress-studio), with the Blog theme from `@zeropress/create-theme`.
